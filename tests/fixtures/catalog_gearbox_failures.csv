@@ -1,0 +1,6 @@
+Turbine_ID,Timestamp,Component,Remarks
+T01,2016-07-18T02:10:00+00:00,GEARBOX,Gearbox pump damaged
+T06,2017-10-17T08:38:00+00:00,GEARBOX,Gearbox bearings damaged
+T09,2016-10-11T08:06:00+00:00,GEARBOX,Gearbox repaired
+T09,2017-10-18T08:32:00+00:00,GEARBOX,Gearbox noise
+T11,2016-08-01T00:00:00+00:00,GENERATOR,Generator brushes worn
