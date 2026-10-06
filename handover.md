@@ -79,4 +79,4 @@ Tuesday: a q10/q50/q90 model that calls `evaluate_baselines` and `score_predicti
 
 ## Key commit
 
-Not committed in this session.
+`074f1ad` — Capped gearbox RUL labels and leave-one-failure-out scoring.
