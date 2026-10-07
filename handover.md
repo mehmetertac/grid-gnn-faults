@@ -91,4 +91,4 @@ Wednesday: conformal intervals on the held-out run-to-failure windows; check cov
 
 ## Key commit
 
-`eb4d142` — LightGBM quantile gearbox RUL, LOFO band figures, pandas 2.x label fix (prior: `074f1ad`).
+`57ff954` — LightGBM quantile gearbox RUL, LOFO band figures, pandas 2.x label fix (prior: `074f1ad`).
