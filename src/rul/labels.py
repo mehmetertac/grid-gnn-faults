@@ -319,8 +319,13 @@ def _mark_censored(group: pd.DataFrame, rul_max: int) -> pd.DataFrame:
 
 
 def _midnight_ns(values: pd.Series) -> np.ndarray:
-    midnight = pd.to_datetime(values, utc=True).dt.floor("D")
-    return midnight.astype("int64").to_numpy()
+    """Nanoseconds since epoch at UTC midnight (pandas 2.x-safe)."""
+    midnight = pd.to_datetime(values, utc=True)
+    if isinstance(midnight, pd.DatetimeIndex):
+        normalized = midnight.normalize()
+    else:
+        normalized = midnight.dt.normalize()
+    return normalized.to_numpy(dtype="datetime64[ns]").astype("int64")
 
 
 def _empty_events() -> pd.DataFrame:

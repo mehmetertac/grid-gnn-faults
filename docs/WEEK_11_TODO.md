@@ -12,7 +12,7 @@ Reading list: [RUL_DESIGN.md](RUL_DESIGN.md), [handover.md](../handover.md), [RE
 
 ## Tuesday and Wednesday — call the protocol
 
-- [ ] Fit a model that emits q10, q50, and q90. Score it with `evaluate_baselines` / `score_predictions`. Do not invent a second split.
+- [x] Fit a model that emits q10, q50, and q90. Score it with `evaluate_baselines` / `score_predictions`. Do not invent a second split.
 - [ ] Add conformal intervals and check coverage on the held-out run-to-failure windows. State the single-digit event count in the write-up.
 
 ## Thursday — explanation, deployment, grid demo

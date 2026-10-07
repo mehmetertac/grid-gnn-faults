@@ -13,6 +13,7 @@ from rul.labels import (
     daily_from_scored_frame,
     summarize_events,
 )
+from rul.quantile import evaluate_quantile_model, fit_quantile_models, predict_quantiles
 
 __all__ = [
     "RUL_MAX_DAYS",
@@ -20,8 +21,11 @@ __all__ = [
     "constant_baseline",
     "daily_from_scored_frame",
     "evaluate_baselines",
+    "evaluate_quantile_model",
     "fit_linear_anomaly_baseline",
+    "fit_quantile_models",
     "leave_one_failure_out",
+    "predict_quantiles",
     "score_predictions",
     "summarize_events",
 ]

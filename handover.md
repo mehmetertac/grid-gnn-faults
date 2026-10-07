@@ -1,8 +1,8 @@
 # handover.md
 
-**Last updated:** 2026-10-06
+**Last updated:** 2026-10-07
 
-Week 11 Monday slice: gearbox RUL labels and leave-one-failure-out baselines on top of [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin). The thermal model is not refit here.
+Week 11 Tuesday slice: LightGBM quantile gearbox RUL (q10/q50/q90) on Monday daily features, LOFO figures, and P10 maintenance lead-time table in [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md). The thermal model is not refit here.
 
 ---
 
@@ -12,16 +12,20 @@ Week 11 Monday slice: gearbox RUL labels and leave-one-failure-out baselines on 
 |------|--------|
 | Git remote `origin` → [grid-gnn-faults](https://github.com/mehmetertac/grid-gnn-faults) | Done |
 | [AGENT.md](AGENT.md) agent rules, pre-commit file-size check + pytest | Done |
-| [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md) — 90-day C-MAPSS cap, daily contract, 4-event catalog, LOFO | Done |
-| [docs/WEEK_11_TODO.md](docs/WEEK_11_TODO.md) — Monday checked; Tue–Fri open | Done |
-| `src/rul/labels.py` — daily aggregate, gearbox join, censoring | Done |
+| [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md) — cap, LOFO, quantile model, coverage note, P10 warning table | Done |
+| [docs/WEEK_11_TODO.md](docs/WEEK_11_TODO.md) — Monday + Tuesday quantile checked | Done |
+| `src/rul/labels.py` — daily aggregate, gearbox join, censoring (pandas 2.x day count fix) | Done |
 | `src/rul/evaluate.py` — constant and linear baselines, MAE, pinball, coverage | Done |
-| Tests on fixtures (no EDP download, no twin import) | 15 passed on 2026-10-06 |
-| Quantile model, conformal intervals, SHAP, deployment, IEEE 39-bus notebook | Not started |
+| `src/rul/quantile.py` — LightGBM q10/q50/q90, LOFO, PDP, warning lead time | Done |
+| `src/rul/plots.py` — true RUL vs P50 with P10–P90 band PNGs | Done |
+| `scripts/evaluate_quantile_rul.py` — CLI → `reports/rul/` | Done |
+| Tests on fixtures (no EDP download, no twin import) | 22 passed on 2026-10-07 |
+| Twin scored CSV export for four catalog events (warning table filled) | Pending export |
+| Conformal intervals, SHAP, deployment, IEEE 39-bus notebook | Not started |
 
-### Test run (2026-10-06)
+### Test run (2026-10-07)
 
-`pytest tests/ -q`: 15 passed. `python scripts/check_file_size.py`: all scanned files are at or under 1,000 lines.
+`pytest tests/ -q`: 22 passed. `python scripts/check_file_size.py`: all scanned files are at or under 1,000 lines.
 
 ---
 
@@ -36,8 +40,12 @@ grid-gnn-faults/
 ├── docs/WEEK_11_TODO.md
 ├── src/rul/
 │   ├── labels.py
-│   └── evaluate.py
-├── scripts/check_file_size.py
+│   ├── evaluate.py
+│   ├── quantile.py
+│   └── plots.py
+├── scripts/
+│   ├── check_file_size.py
+│   └── evaluate_quantile_rul.py
 ├── tests/
 └── tests/fixtures/
 ```
@@ -56,6 +64,9 @@ grid-gnn-faults/
 | `fit_linear_anomaly_baseline` | `rul.evaluate` | OLS from `anomaly_score_mean`, training fold only |
 | `score_predictions` | `rul.evaluate` | MAE, pinball at 0.1/0.5/0.9, interval coverage |
 | `evaluate_baselines` | `rul.evaluate` | Both baselines on every fold |
+| `fit_quantile_models` | `rul.quantile` | Three LightGBM quantile boosters on daily features |
+| `evaluate_quantile_model` | `rul.quantile` | LOFO quantile metrics, coverage, warnings, PDP |
+| `write_all_band_figures` | `rul.plots` | Headline PNG per held-out event |
 
 Input columns from the twin, already computed: `oil_residual`, `bear_residual`, `anomaly_score`, `theta_oil`, `theta_bear`, `delta_bear_oil`. Failure log columns: `Turbine_ID`, `Timestamp`, `Component`, `Remarks` with `Component == "GEARBOX"`.
 
@@ -67,16 +78,17 @@ Catalog in the twin config, also stored as `CATALOGUED_GEARBOX_EVENTS`: **4 even
 pip install -e ".[dev]"
 pytest tests/ -q
 python scripts/check_file_size.py
+python scripts/evaluate_quantile_rul.py --labeled daily.csv --out reports/rul
 ```
 
 ---
 
 ## Suggested next step
 
-Tuesday: a q10/q50/q90 model that calls `evaluate_baselines` and `score_predictions`. Keep the split. Do not refit the ODE.
+Wednesday: conformal intervals on the held-out run-to-failure windows; check coverage after calibration. Do not refit the ODE.
 
 ---
 
 ## Key commit
 
-`074f1ad` — Capped gearbox RUL labels and leave-one-failure-out scoring.
+`eb4d142` — LightGBM quantile gearbox RUL, LOFO band figures, pandas 2.x label fix (prior: `074f1ad`).
