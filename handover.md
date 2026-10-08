@@ -103,4 +103,4 @@ Thursday: SHAP or attention on daily features; small Streamlit/FastAPI twin view
 
 ## Key commit
 
-`997f76d` — MAPIE CQR RUL at 80%/90%, conformal coverage CSVs, `run_twin.py` timeline (prior: `57ff954` quantile RUL).
+`68dc925` — MAPIE CQR RUL at 80%/90%, conformal coverage CSVs, `run_twin.py` timeline (prior: `57ff954` quantile RUL).
