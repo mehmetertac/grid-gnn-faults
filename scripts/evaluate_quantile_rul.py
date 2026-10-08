@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from rul.conformal import evaluate_conformal_rul
 from rul.evaluate import evaluate_baselines
 from rul.labels import attach_rul_labels, daily_from_scored_frame
 from rul.plots import write_all_band_figures
@@ -54,15 +55,22 @@ def main() -> None:
         rul_max=args.rul_max,
         maintenance_threshold=args.maintenance_threshold,
     )
+    conformal_cov, width_horizon, conformal_folds = evaluate_conformal_rul(
+        labeled,
+        rul_max=args.rul_max,
+    )
     combined = pd.concat([baselines, metrics], ignore_index=True, sort=False)
 
     combined.to_csv(out / "metrics.csv", index=False)
     coverage.to_csv(out / "coverage.csv", index=False)
+    conformal_cov.to_csv(out / "conformal_coverage.csv", index=False)
+    width_horizon.to_csv(out / "width_vs_horizon.csv", index=False)
     warnings.to_csv(out / "warnings.csv", index=False)
     pdp_tables(fold_results).to_csv(out / "pdp_anomaly_mean.csv", index=False)
     write_all_band_figures(
         fold_results,
         out / "figures",
+        conformal_results=conformal_folds,
         last_n_days=args.last_n_days,
         maintenance_threshold=args.maintenance_threshold,
     )

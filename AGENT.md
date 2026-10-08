@@ -17,8 +17,10 @@ Week 10 physics, the learned residual, and the hybrid-residual detector live in 
 | [src/rul/labels.py](src/rul/labels.py) | Daily aggregate and capped labels |
 | [src/rul/evaluate.py](src/rul/evaluate.py) | Baselines, leave-one-failure-out, MAE, pinball, coverage |
 | [src/rul/quantile.py](src/rul/quantile.py) | LightGBM q10/q50/q90, PDP, maintenance warning lead time |
-| [src/rul/plots.py](src/rul/plots.py) | Headline RUL band figures |
-| [scripts/evaluate_quantile_rul.py](scripts/evaluate_quantile_rul.py) | LOFO quantile CLI |
+| [src/rul/conformal.py](src/rul/conformal.py) | MAPIE CQR at 80%/90%, LOFO conformal coverage |
+| [src/rul/plots.py](src/rul/plots.py) | Raw + CQR band figures; twin timeline |
+| [scripts/evaluate_quantile_rul.py](scripts/evaluate_quantile_rul.py) | LOFO quantile + conformal CLI |
+| [scripts/run_twin.py](scripts/run_twin.py) | End-to-end twin → conformal RUL CSV and timeline PNG |
 | [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin) | Week 10 twin: ODE, hybrid residual, anomaly score, gearbox log |
 
 Headline contract: **probabilistic outputs on every prediction**, **leave-one-failure-out evaluation with no leakage from the failure window**, and a **maintenance-meaning** section in user-facing docs.

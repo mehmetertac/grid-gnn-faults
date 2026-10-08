@@ -106,9 +106,25 @@ After prediction, each quantile is clipped to `[0, 90]` and reordered so q10 ≤
 
 **Monotonic sanity.** The build tries `monotone_constraints = -1` on `anomaly_score_mean` and `anomaly_score_max` (higher anomaly → lower RUL). LightGBM 4.x in this environment rejects monotone constraints with the quantile objective; the code falls back to unconstrained quantile trees and sets `monotone_applied = False` on the metrics row. Either way, partial dependence on `anomaly_score_mean` (other features at training medians) must be non-increasing for q50 within 1e-4 days when constraints are active; when they are not, the PDP table is still written for manual review.
 
-**Coverage vs nominal 80%.** Interval coverage uses `[q10, q90]` against true RUL on the held-out window. Nominal central coverage is 80%. Report `coverage_gap = pi_coverage - 0.8` per event in `coverage.csv`. Expect the band to be **too narrow early** in the run (`days_to_event > 45`): most training labels sit on the 90-day plateau, so the raw quantile interval undercovers there. Wednesday conformal calibration is meant to fix that; this slice does not widen intervals.
+**Coverage vs nominal 80%.** Interval coverage uses `[q10, q90]` against true RUL on the held-out window. Nominal central coverage is 80%. Report `coverage_gap = pi_coverage - 0.8` per event in `coverage.csv`. Expect the band to be **too narrow early** in the run (`days_to_event > 45`): most training labels sit on the 90-day plateau, so the raw quantile interval undercovers there until conformal widening is applied.
 
-**Headline figures.** [src/rul/plots.py](../src/rul/plots.py) writes one PNG per held-out event: true RUL, P50, and the P10–P90 band over the last 90 days before failure, with a dashed line at the maintenance threshold.
+### Conformal intervals (CQR, MAPIE)
+
+Implementation: [src/rul/conformal.py](../src/rul/conformal.py). Same Week 8 pattern as [energy-causal-conformal](https://github.com/mehmetertac/energy-causal-conformal): `ConformalizedQuantileRegressor` with `prefit=True` on LightGBM quantile models.
+
+For each LOFO fold:
+
+- **Test** — unchanged: held-out event window (`0 < days_to_event <= 90`).
+- **Train fit** — other turbines only, calendar dates strictly before the test window (1-day gap).
+- **Calibration** — chronological tail of **uncensored** rows from those other turbines (exact RUL labels; not censored cap rows).
+
+Targets: **80%** CQR on q10/q50/q90; **90%** CQR on q05/q50/q95 fit on the same train-fit block. Coverage is scored on **unclipped** MAPIE bounds; figures may clip to `[0, 90]` for display.
+
+**Coverage caveat (say this before being asked).** The catalog has **four** gearbox events. Each fold’s calibration set is a small, time-ordered slice of the remaining turbines — not a large exchangeable pool. Split conformal coverage is a **marginal** guarantee under exchangeability; these run-to-failure windows are few and not exchangeable with healthy days, so a gap versus 80% or 90% is expected noise, not a tuning target. The **pooled** row in `conformal_coverage.csv` mixes separate folds; it is a summary, not one conformal trial. When `n_cal` is below MAPIE’s minimum (or the earliest event leaves almost no pre-window history), `calibration_small` is true and CQR intervals are omitted rather than overstated.
+
+**Width vs horizon.** `width_vs_horizon.csv` and per-event `cqr80_early_mean_width` / `cqr80_late_mean_width` (split at 45 days to event) check whether intervals **narrow near failure**. The flag `width_narrows_near_failure` is set from the data; if late windows are not narrower, the write-up states that explicitly.
+
+**Headline figures.** [src/rul/plots.py](../src/rul/plots.py) writes one PNG per held-out event: true RUL, P50, raw P10–P90, and CQR 80%/90% overlays. [scripts/run_twin.py](../scripts/run_twin.py) adds a four-panel timeline (physics vs actual, hybrid residual, anomaly score, conformal RUL band).
 
 Run leave-one-failure-out quantile evaluation (baselines + model) with:
 
@@ -118,7 +134,13 @@ python scripts/evaluate_quantile_rul.py --labeled path/to/daily_labeled.csv --ou
 python scripts/evaluate_quantile_rul.py --scored path/to/scored_10min.csv --failures path/to/gearbox_log.csv --out reports/rul
 ```
 
-Outputs: `metrics.csv`, `coverage.csv`, `warnings.csv`, `pdp_anomaly_mean.csv`, and `figures/*_rul_band.png`.
+Outputs: `metrics.csv`, `coverage.csv`, `conformal_coverage.csv`, `width_vs_horizon.csv`, `warnings.csv`, `pdp_anomaly_mean.csv`, and `figures/*_rul_band.png`.
+
+End-to-end twin (requires installed [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin); does not refit the ODE):
+
+```powershell
+python scripts/run_twin.py --turbine T06 --out reports/twin
+```
 
 **Scored export.** A full fleet scored frame (all six Week 10 columns: `oil_residual`, `bear_residual`, `anomaly_score`, `theta_oil`, `theta_bear`, `delta_bear_oil`) was not present under [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin) `results/` at implementation time (residual parquets and layer dumps do not include the full scored contract). Fill the warning column below after exporting a scored CSV from the twin without refitting the ODE or detector.
 

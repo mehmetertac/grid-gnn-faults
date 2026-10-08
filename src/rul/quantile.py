@@ -41,6 +41,8 @@ DEFAULT_LGBM_PARAMS: dict[str, Any] = {
     "bagging_fraction": 1.0,
     "feature_fraction": 1.0,
     "bagging_freq": 0,
+    "force_col_wise": True,
+    "n_jobs": 1,
 }
 
 
@@ -82,7 +84,7 @@ def feature_matrix(frame: pd.DataFrame) -> pd.DataFrame:
     missing = [col for col in DAILY_FEATURE_COLUMNS if col not in frame.columns]
     if missing:
         raise ValueError(f"Labeled frame is missing feature columns: {missing}")
-    return frame.loc[:, DAILY_FEATURE_COLUMNS].copy()
+    return frame.loc[:, DAILY_FEATURE_COLUMNS].copy().fillna(0.0)
 
 
 def monotone_constraint_vector(
@@ -110,23 +112,25 @@ def _lgbm_params(
 def fit_quantile_models(
     train: pd.DataFrame,
     *,
+    quantiles: tuple[float, ...] = QUANTILES,
     rul_max: int = RUL_MAX_DAYS,
     target_column: str = "rul",
     lgbm_overrides: dict[str, Any] | None = None,
 ) -> QuantileModelBundle:
-    """Fit q10/q50/q90 boosters on training rows (includes censored at ``rul_max``)."""
-    x = feature_matrix(train)
-    y = train[target_column].astype(float).to_numpy()
-    monotone = monotone_constraint_vector(tuple(x.columns))
+    """Fit one LightGBM quantile booster per level (includes censored at ``rul_max``)."""
+    x_frame = feature_matrix(train)
+    y = train[target_column].astype(float)
+    feature_cols = tuple(x_frame.columns)
+    monotone = monotone_constraint_vector(feature_cols)
     models: dict[float, LGBMRegressor] = {}
     monotone_applied = True
 
     def _fit_all(use_monotone: bool) -> dict[float, LGBMRegressor]:
         fitted: dict[float, LGBMRegressor] = {}
         mono = monotone if use_monotone else None
-        for q in QUANTILES:
+        for q in quantiles:
             model = LGBMRegressor(**_lgbm_params(q, lgbm_overrides, mono))
-            model.fit(x, y)
+            model.fit(x_frame, y)
             fitted[q] = model
         return fitted
 
@@ -137,10 +141,38 @@ def fit_quantile_models(
         models = _fit_all(False)
     return QuantileModelBundle(
         models=models,
-        feature_columns=tuple(x.columns),
+        feature_columns=feature_cols,
         monotone_applied=monotone_applied,
         rul_max=rul_max,
     )
+
+
+def predict_quantile_triple(
+    bundle: QuantileModelBundle,
+    frame: pd.DataFrame,
+    lower_q: float,
+    median_q: float,
+    upper_q: float,
+    *,
+    clip_and_order: bool = True,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Predict three quantile levels from a fitted bundle."""
+    for q in (lower_q, median_q, upper_q):
+        if q not in bundle.models:
+            raise KeyError(f"bundle has no model for quantile {q}")
+    x = feature_matrix(frame)
+    raw = np.column_stack(
+        [
+            bundle.models[lower_q].predict(x),
+            bundle.models[median_q].predict(x),
+            bundle.models[upper_q].predict(x),
+        ]
+    )
+    if not clip_and_order:
+        return raw[:, 0], raw[:, 1], raw[:, 2]
+    clipped = np.clip(raw, 0.0, float(bundle.rul_max))
+    ordered = np.sort(clipped, axis=1)
+    return ordered[:, 0], ordered[:, 1], ordered[:, 2]
 
 
 def predict_quantiles(
@@ -148,14 +180,7 @@ def predict_quantiles(
     frame: pd.DataFrame,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Predict q10/q50/q90, clip to ``[0, rul_max]``, enforce q10 ≤ q50 ≤ q90."""
-    x = feature_matrix(frame)
-    raw = {
-        q: bundle.models[q].predict(x) for q in QUANTILES
-    }
-    stacked = np.column_stack([raw[q] for q in QUANTILES])
-    clipped = np.clip(stacked, 0.0, float(bundle.rul_max))
-    ordered = np.sort(clipped, axis=1)
-    return ordered[:, 0], ordered[:, 1], ordered[:, 2]
+    return predict_quantile_triple(bundle, frame, 0.1, 0.5, 0.9)
 
 
 def partial_dependence_anomaly_mean(
@@ -428,6 +453,7 @@ __all__ = [
     "monotone_constraint_vector",
     "partial_dependence_anomaly_mean",
     "pdp_tables",
+    "predict_quantile_triple",
     "predict_quantiles",
     "score_fold",
     "warning_lead_time_days",
