@@ -112,4 +112,4 @@ Friday reflection doc; Streamlit/FastAPI twin view reading `results/shap_sensor_
 
 ## Key commit
 
-(Pending) — TreeSHAP sensor explanations, bundle save/load, `explain_rul.py` (prior: `68dc925` MAPIE CQR RUL, `run_twin.py` timeline).
+`76a3dc6` — TreeSHAP sensor explanations, bundle save/load, `explain_rul.py` (prior: `68dc925` MAPIE CQR RUL, `run_twin.py` timeline).
