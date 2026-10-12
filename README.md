@@ -1,6 +1,6 @@
 # grid-gnn-faults
 
-Probabilistic remaining useful life (RUL) for the Week 10 wind-turbine gearbox twin: LightGBM quantiles at P10/P50/P90, MAPIE conformalized quantile regression (80% and 90% intervals), leave-one-failure-out evaluation, band figures, and an end-to-end `run_twin.py` timeline. Later this repo also carries SHAP or attention explanations, a Streamlit/FastAPI view, and a small GNN fault-localization demo on the IEEE 39-bus system.
+Probabilistic remaining useful life (RUL) for the Week 10 wind-turbine gearbox twin: LightGBM quantiles at P10/P50/P90, MAPIE conformalized quantile regression (80% and 90% intervals), leave-one-failure-out evaluation, band figures, TreeSHAP sensor explanations (`results/shap_sensor_ranking.csv`), and an end-to-end `run_twin.py` timeline. Later: a Streamlit/FastAPI view and a small GNN fault-localization demo on the IEEE 39-bus system.
 
 The thermal ODE, learned residual, and hybrid-residual detector stay in [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin). This repo aggregates the series that twin already emits.
 
@@ -16,7 +16,10 @@ pre-commit install
 pytest tests/ -q
 python scripts/check_file_size.py
 python scripts/evaluate_quantile_rul.py --labeled path/to/daily_labeled.csv --out reports/rul
+python scripts/explain_rul.py --labeled path/to/daily_labeled.csv --out results
 ```
+
+SHAP sensor ranking and figures: [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md).
 
 ## What this means in maintenance terms
 

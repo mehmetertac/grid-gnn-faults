@@ -17,7 +17,7 @@ Reading list: [RUL_DESIGN.md](RUL_DESIGN.md), [handover.md](../handover.md), [RE
 
 ## Thursday — explanation, deployment, grid demo
 
-- [ ] SHAP or attention: which daily sensors move the RUL prediction.
+- [x] SHAP or attention: which daily sensors move the RUL prediction ([docs/EXPLANATIONS.md](EXPLANATIONS.md), `src/rul/explain.py`).
 - [ ] A small Streamlit or FastAPI view of the twin.
 - [ ] One notebook: GNN fault localization on the IEEE 39-bus system with torch-geometric and pandapower. One accuracy table, one figure.
 

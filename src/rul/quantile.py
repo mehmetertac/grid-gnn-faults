@@ -7,8 +7,10 @@ dependence on anomaly_score_mean, and maintenance warning lead time from P10.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+import joblib
 import numpy as np
 import pandas as pd
 from lightgbm import LGBMRegressor
@@ -144,6 +146,33 @@ def fit_quantile_models(
         feature_columns=feature_cols,
         monotone_applied=monotone_applied,
         rul_max=rul_max,
+    )
+
+
+def save_quantile_bundle(bundle: QuantileModelBundle, path: Path | str) -> Path:
+    """Persist a fitted quantile bundle for SHAP and deployment."""
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    joblib.dump(
+        {
+            "models": bundle.models,
+            "feature_columns": bundle.feature_columns,
+            "monotone_applied": bundle.monotone_applied,
+            "rul_max": bundle.rul_max,
+        },
+        out,
+    )
+    return out
+
+
+def load_quantile_bundle(path: Path | str) -> QuantileModelBundle:
+    """Load a bundle written by ``save_quantile_bundle``."""
+    payload = joblib.load(path)
+    return QuantileModelBundle(
+        models=payload["models"],
+        feature_columns=tuple(payload["feature_columns"]),
+        monotone_applied=bool(payload["monotone_applied"]),
+        rul_max=int(payload["rul_max"]),
     )
 
 
@@ -450,7 +479,9 @@ __all__ = [
     "evaluate_quantile_model",
     "feature_matrix",
     "fit_quantile_models",
+    "load_quantile_bundle",
     "monotone_constraint_vector",
+    "save_quantile_bundle",
     "partial_dependence_anomaly_mean",
     "pdp_tables",
     "predict_quantile_triple",
