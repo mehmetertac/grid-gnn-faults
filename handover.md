@@ -1,6 +1,6 @@
 # handover.md
 
-**Last updated:** 2026-10-13
+**Last updated:** 2026-10-14
 
 Week 11 Friday slice: probabilistic gearbox RUL (quantile + CQR + LOFO + SHAP), deployment in [wind-digital-twin/service](https://github.com/mehmetertac/wind-digital-twin/tree/main/service), and [WEEK_11_REFLECTION.md](WEEK_11_REFLECTION.md). The thermal model is not refit here.
 
@@ -72,4 +72,4 @@ IEEE 39-bus GNN fault-localization notebook (one accuracy table, one figure). Re
 
 ## Key commit
 
-*(Update after push with Week 11 deployment + reflection commit hash.)*
+`4f16067` — Week 11 reflection and deployment docs (prior: `76a3dc6` TreeSHAP sensor explanations).
