@@ -18,12 +18,12 @@ Reading list: [RUL_DESIGN.md](RUL_DESIGN.md), [handover.md](../handover.md), [RE
 ## Thursday — explanation, deployment, grid demo
 
 - [x] SHAP or attention: which daily sensors move the RUL prediction ([docs/EXPLANATIONS.md](EXPLANATIONS.md), `src/rul/explain.py`).
-- [ ] A small Streamlit or FastAPI view of the twin.
+- [x] A small Streamlit or FastAPI view of the twin ([wind-digital-twin/service](https://github.com/mehmetertac/wind-digital-twin/tree/main/service)).
 - [ ] One notebook: GNN fault localization on the IEEE 39-bus system with torch-geometric and pandapower. One accuracy table, one figure.
 
 ## Friday
 
-- [ ] Write `WEEK_11_REFLECTION.md`.
+- [x] Write `WEEK_11_REFLECTION.md`.
 
 ## All week
 

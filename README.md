@@ -1,10 +1,10 @@
 # grid-gnn-faults
 
-Probabilistic remaining useful life (RUL) for the Week 10 wind-turbine gearbox twin: LightGBM quantiles at P10/P50/P90, MAPIE conformalized quantile regression (80% and 90% intervals), leave-one-failure-out evaluation, band figures, TreeSHAP sensor explanations (`results/shap_sensor_ranking.csv`), and an end-to-end `run_twin.py` timeline. Later: a Streamlit/FastAPI view and a small GNN fault-localization demo on the IEEE 39-bus system.
+Probabilistic remaining useful life (RUL) for the Week 10 wind-turbine gearbox twin: LightGBM quantiles at P10/P50/P90, MAPIE conformalized quantile regression (80% and 90% intervals), leave-one-failure-out evaluation, band figures, TreeSHAP sensor explanations (`results/shap_sensor_ranking.csv`), an end-to-end `run_twin.py` timeline, and a **Streamlit/FastAPI deployment** in [wind-digital-twin/service](https://github.com/mehmetertac/wind-digital-twin/tree/main/service). Still open: a small GNN fault-localization demo on the IEEE 39-bus system.
 
 The thermal ODE, learned residual, and hybrid-residual detector stay in [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin). This repo aggregates the series that twin already emits.
 
-Design: [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md). Status: [handover.md](handover.md). Week checklist: [docs/WEEK_11_TODO.md](docs/WEEK_11_TODO.md). Agent rules: [AGENT.md](AGENT.md).
+Design: [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md). Status: [handover.md](handover.md). Week checklist: [docs/WEEK_11_TODO.md](docs/WEEK_11_TODO.md). Week 11 reflection: [WEEK_11_REFLECTION.md](WEEK_11_REFLECTION.md). Agent rules: [AGENT.md](AGENT.md).
 
 ## Quickstart
 
