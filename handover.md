@@ -88,4 +88,4 @@ Train a small GCN/GAT on `results/fault_graphs.pt` (or regenerate with `scripts/
 
 ## Key commit
 
-`e4f7885` — IEEE 39-bus fault dataset, PyG graphs, and MLP baseline (prior: `c8c1411` handover hash update).
+`d4e2ea1` — IEEE 39-bus fault dataset, PyG graphs, and MLP baseline (prior: `c8c1411` handover hash update).
