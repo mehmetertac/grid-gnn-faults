@@ -1,10 +1,10 @@
 # grid-gnn-faults
 
-Probabilistic remaining useful life (RUL) for the Week 10 wind-turbine gearbox twin: LightGBM quantiles at P10/P50/P90, MAPIE conformalized quantile regression (80% and 90% intervals), leave-one-failure-out evaluation, band figures, TreeSHAP sensor explanations (`results/shap_sensor_ranking.csv`), an end-to-end `run_twin.py` timeline, and a **Streamlit/FastAPI deployment** in [wind-digital-twin/service](https://github.com/mehmetertac/wind-digital-twin/tree/main/service). Still open: a small GNN fault-localization demo on the IEEE 39-bus system.
+Probabilistic remaining useful life (RUL) for the Week 10 wind-turbine gearbox twin: LightGBM quantiles at P10/P50/P90, MAPIE conformalized quantile regression (80% and 90% intervals), leave-one-failure-out evaluation, band figures, TreeSHAP sensor explanations (`results/shap_sensor_ranking.csv`), an end-to-end `run_twin.py` timeline, and a **Streamlit/FastAPI deployment** in [wind-digital-twin/service](https://github.com/mehmetertac/wind-digital-twin/tree/main/service). **Track C (grid):** IEEE 39-bus fault dataset, PyG graphs, and an MLP baseline — see [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md). GNN training is the next step.
 
 The thermal ODE, learned residual, and hybrid-residual detector stay in [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin). This repo aggregates the series that twin already emits.
 
-Design: [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md). Status: [handover.md](handover.md). Week checklist: [docs/WEEK_11_TODO.md](docs/WEEK_11_TODO.md). Week 11 reflection: [WEEK_11_REFLECTION.md](WEEK_11_REFLECTION.md). Agent rules: [AGENT.md](AGENT.md).
+Design: [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md), [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md). Status: [handover.md](handover.md). Week checklist: [docs/WEEK_11_TODO.md](docs/WEEK_11_TODO.md). Week 11 reflection: [WEEK_11_REFLECTION.md](WEEK_11_REFLECTION.md). Agent rules: [AGENT.md](AGENT.md).
 
 ## Quickstart
 
@@ -21,11 +21,28 @@ python scripts/explain_rul.py --labeled path/to/daily_labeled.csv --out results
 
 SHAP sensor ranking and figures: [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md).
 
+### Grid fault localization (IEEE 39-bus)
+
+CPU PyTorch wheels are enough for day 1 (no CUDA required):
+
+```powershell
+pip install -e ".[dev,grid]"
+pip install torch --index-url https://download.pytorch.org/whl/cpu  # if torch is not installed yet
+python scripts/build_fault_dataset.py --out results --scenarios 50 --seed 0
+pytest tests/test_grid_faults.py -q
+```
+
+Notebook driver: [notebooks/01_fault_localization_gnn.ipynb](notebooks/01_fault_localization_gnn.ipynb).
+
 ## What this means in maintenance terms
 
 RUL here is calendar days until the next logged gearbox event, capped at 90. Ninety days is the same pre-failure buffer Week 10 already keeps out of thermal training, so a prediction inside that window is an inspection planning horizon for the oil, the bearing temperatures, and the gearbox maintenance log.
 
 The published EDP catalog has four gearbox events on three turbines (T01 pump damage, T06 bearing damage, and two T09 lines). Turbines with no gearbox line are labeled as healthy at the cap and kept in training. A constant prediction of 90 days means the daily anomaly score still looks like those healthy rows. With a single-digit event count, the useful output is a P10/P50/P90 band plus conformal intervals whose coverage has been checked honestly on the held-out run-to-failure windows (see the calibration caveat in [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md)). The pessimistic P10 crossing a 14-day planning threshold is the lead time an O&M planner would have had to schedule inspection.
+
+## What this means in grid operations terms
+
+Fault localization here means: given pre-fault and during-fault voltages (and injections) on the 39-bus test system, predict which bus hosted the three-phase fault. The flattened MLP baseline (~96% test accuracy on the seed-0 split) shows how much signal is in the measurements alone; a GNN should use the network graph to do better under noise or missing buses.
 
 ## License
 

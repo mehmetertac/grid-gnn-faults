@@ -24,6 +24,11 @@ Week 10 physics, the learned residual, and the hybrid-residual detector live in 
 | [src/rul/explain.py](src/rul/explain.py) | TreeSHAP global/local figures and `shap_sensor_ranking.csv` |
 | [scripts/explain_rul.py](scripts/explain_rul.py) | LOFO fit/load bundle → SHAP outputs under `results/` |
 | [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md) | Sensor map, CSV schema, field-intuition notes |
+| [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md) | IEEE 39-bus fault dataset, voltage method, MLP baseline |
+| [src/grid/simulate.py](src/grid/simulate.py) | case39 scenarios and during-fault voltages |
+| [src/grid/graph.py](src/grid/graph.py) | PyG graphs, split, normalization |
+| [scripts/build_fault_dataset.py](scripts/build_fault_dataset.py) | End-to-end dataset + MLP baseline CLI |
+| [notebooks/01_fault_localization_gnn.ipynb](notebooks/01_fault_localization_gnn.ipynb) | Notebook driver for day 1 |
 | [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin) | Week 10 twin: ODE, hybrid residual, anomaly score, gearbox log |
 
 Headline contract: **probabilistic outputs on every prediction**, **leave-one-failure-out evaluation with no leakage from the failure window**, and a **maintenance-meaning** section in user-facing docs.
