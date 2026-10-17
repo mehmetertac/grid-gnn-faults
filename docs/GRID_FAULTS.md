@@ -1,6 +1,6 @@
-# IEEE 39-bus fault localization (Track C day 1)
+# IEEE 39-bus fault localization (Track C)
 
-Three-phase bolted faults on [pandapower](https://pandapower.readthedocs.io/) `networks.case39()`, with graph-level labels (which bus faulted). This is the dataset and non-graph baseline for a later GNN.
+Three-phase bolted faults on [pandapower](https://pandapower.readthedocs.io/) `networks.case39()`, with **graph-level** labels (which bus faulted). Dataset, MLP baseline, and 2-layer GCN live under [`src/grid/`](../src/grid/).
 
 ## Dataset
 
@@ -43,17 +43,22 @@ python scripts/build_fault_dataset.py --out results --scenarios 50 --seed 0
 
 Edges: in-service lines and two-winding transformers, undirected, weight = `1/|Z_pu|` (admittance magnitude). See [`src/grid/graph.py`](../src/grid/graph.py).
 
-## Baselines (test split, seed 0)
+## Models (test split, seed 0)
 
-| Model | Accuracy | Top-3 |
-|-------|----------|-------|
-| Flattened MLP (39×8 → 128 → 39) | 0.956 | 0.982 |
-| Min during-fault `vm_pu` (oracle-style) | 1.000 | 1.000 |
+Train GCN: `python scripts/train_fault_gnn.py --data results --out results` → `gnn_metrics.json`, `fault_gcn.pt`, [docs/figures/fault_error_layout.png](../docs/figures/fault_error_layout.png).
 
-The voltage-minimum rule is a sanity check: with Ybus bolted faults the faulted bus is at 0 pu. It is **not** the same as argmax(ΔV), because a distant bus with a higher pre-fault voltage can show a larger ΔV while not being the fault.
+| Model | Accuracy | Top-3 | Mean hop error | Acc (one random line out) | Hops (one line out) |
+|-------|----------|-------|----------------|---------------------------|---------------------|
+| Flattened MLP (39×8 → 128 → 39) | 0.956 | 0.982 | 0.059 | 0.956 | 0.059 |
+| 2-layer GCN, hidden 64, mean pool | 0.662 | 0.800 | 0.851 | 0.664 | 0.882 |
+| Min during-fault `vm_pu` (oracle) | 1.000 | 1.000 | 0.000 | — | — |
 
-Tomorrow’s GNN should be compared to the MLP, not the voltage minimum alone.
+**Hop error:** mean shortest-path distance on the undirected case39 graph between predicted and true bus (0 = exact). Implemented in [`src/grid/model.py`](../src/grid/model.py).
+
+**Robustness:** one random undirected branch removed per test graph (both directed edges); node features are **not** re-simulated. The MLP ignores edges, so metrics are unchanged. The GCN sees a sparser graph; on this dataset the MLP already captures nearly all voltage-depression signal, so the GCN does not beat it on clean data.
+
+The voltage-minimum rule is a sanity check only (Ybus bolted faults pin the fault bus near 0 pu). It is **not** argmax(ΔV).
 
 ## Grid operations note
 
-For operators, the MLP and (later) GNN answer: *given PMU-like voltages and injections during a fault, which bus is the fault location?* The baseline shows much of the signal is local voltage depression; the GNN must use topology to beat or match the MLP when measurements are noisy or incomplete.
+For operators, these models answer: *given PMU-like voltages and injections during a fault, which bus is the fault location?* Top-1 accuracy alone hides whether errors are **one hop** away or across the system — hop distance is the operations-facing metric. A graph model is the credible path when buses are unobserved or topology changes; this demo reports honestly that the flattened MLP wins on clean Ybus features.

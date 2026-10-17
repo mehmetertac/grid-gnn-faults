@@ -28,7 +28,9 @@ Week 10 physics, the learned residual, and the hybrid-residual detector live in 
 | [src/grid/simulate.py](src/grid/simulate.py) | case39 scenarios and during-fault voltages |
 | [src/grid/graph.py](src/grid/graph.py) | PyG graphs, split, normalization |
 | [scripts/build_fault_dataset.py](scripts/build_fault_dataset.py) | End-to-end dataset + MLP baseline CLI |
-| [notebooks/01_fault_localization_gnn.ipynb](notebooks/01_fault_localization_gnn.ipynb) | Notebook driver for day 1 |
+| [src/grid/model.py](src/grid/model.py) | GCN, hop metrics, robustness, layout figure |
+| [scripts/train_fault_gnn.py](scripts/train_fault_gnn.py) | Train GCN and write `gnn_metrics.json` |
+| [notebooks/01_fault_localization_gnn.ipynb](notebooks/01_fault_localization_gnn.ipynb) | Dataset + MLP + GCN driver |
 | [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin) | Week 10 twin: ODE, hybrid residual, anomaly score, gearbox log |
 
 Headline contract: **probabilistic outputs on every prediction**, **leave-one-failure-out evaluation with no leakage from the failure window**, and a **maintenance-meaning** section in user-facing docs.

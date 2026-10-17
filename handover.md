@@ -1,8 +1,8 @@
 # handover.md
 
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-17
 
-Week 11 gearbox RUL + deployment remain in place. **Track C day 1** added the IEEE 39-bus fault dataset, graph construction, and MLP baseline. GNN training is not done yet.
+Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN training, hop-distance metrics, edge-drop robustness check, and README figures. Capstone polish and tags live in sibling [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin).
 
 ---
 
@@ -13,18 +13,16 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 1** added the IE
 | Git remote `origin` → [grid-gnn-faults](https://github.com/mehmetertac/grid-gnn-faults) | Done |
 | [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md), [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md) | Done |
 | `src/rul/*` — labels, evaluate, quantile, conformal, plots, explain | Done |
-| Scripts — `evaluate_quantile_rul.py`, `run_twin.py`, `explain_rul.py` | Done |
-| **Deployment** — FastAPI `/twin/score`, `/twin/rul` + Streamlit dashboard in wind-digital-twin | Done |
-| [WEEK_11_REFLECTION.md](WEEK_11_REFLECTION.md) | Done |
-| **Track C day 1** — `src/grid/*`, [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md), `scripts/build_fault_dataset.py`, [notebooks/01_fault_localization_gnn.ipynb](notebooks/01_fault_localization_gnn.ipynb) | Done |
-| 1,950-graph dataset (50 scenarios × 39 buses), PyG `.pt` + `.npz`, ΔV sanity figure | Done (local `results/`) |
-| MLP baseline (test acc ≈ 0.956, top-3 ≈ 0.982); min-`vm_fault` heuristic (1.0) | Done |
+| **Deployment** — FastAPI `/twin/score`, `/twin/rul` + Streamlit in wind-digital-twin | Done |
+| **Track C day 1** — `src/grid/*`, dataset, MLP baseline | Done |
+| **Track C day 2** — [`src/grid/model.py`](src/grid/model.py), [`scripts/train_fault_gnn.py`](scripts/train_fault_gnn.py), GCN vs MLP table, [docs/figures/fault_error_layout.png](docs/figures/fault_error_layout.png) | Done |
+| GCN test acc ≈ 0.662 vs MLP 0.956 (seed 0); mean hop error 0.85 vs 0.06 | Done (local `results/`) |
 | Twin scored CSV export for four catalog events (warning table filled) | Pending export |
-| IEEE 39-bus **GNN** training + accuracy table vs MLP | Not started |
+| wind-digital-twin README v1.0.0 polish + tag | See wind-digital-twin handover |
 
-### Test run (2026-10-15)
+### Test run (2026-10-17)
 
-`pytest tests/ -q` in grid-gnn-faults (RUL fixtures + `tests/test_grid_faults.py` with `importorskip` for torch/pandapower).
+`pytest tests/test_grid_faults.py -q` — 10 passed (torch/pandapower grid tests).
 
 ---
 
@@ -32,60 +30,40 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 1** added the IE
 
 ```
 grid-gnn-faults/
-├── WEEK_11_REFLECTION.md
 ├── handover.md
-├── docs/RUL_DESIGN.md
 ├── docs/GRID_FAULTS.md
+├── docs/figures/fault_error_layout.png
 ├── notebooks/01_fault_localization_gnn.ipynb
 ├── src/rul/
-├── src/grid/
+├── src/grid/          # simulate, graph, baseline, model
 ├── scripts/build_fault_dataset.py
-├── scripts/
+├── scripts/train_fault_gnn.py
 └── tests/
-```
-
-Serving layer (sibling repo):
-
-```
-wind-digital-twin/service/
-├── src/twin_service/
-├── dashboard/
-├── models/
-└── scripts/export_models.py
 ```
 
 ---
 
 ## Core module API
 
-**RUL** — unchanged; see [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md) and `src/rul/`.
-
 **Grid fault localization (`src/grid/`)**
 
 | Module | Purpose |
 |--------|---------|
-| [simulate.py](src/grid/simulate.py) | `load_case39()`, `generate_fault_dataset()`, Ybus bolted during-fault voltages |
-| [graph.py](src/grid/graph.py) | Topology, stratified split, z-score, PyG `Data`, ΔV plot |
-| [baseline.py](src/grid/baseline.py) | Flattened MLP + min during-fault voltage heuristic |
+| [simulate.py](src/grid/simulate.py) | case39 scenarios, Ybus bolted during-fault voltages |
+| [graph.py](src/grid/graph.py) | Topology, split, z-score, PyG `Data`, ΔV plot |
+| [baseline.py](src/grid/baseline.py) | Flattened MLP + min-`vm_fault` heuristic |
+| [model.py](src/grid/model.py) | `FaultGCN`, hop matrix, edge-drop, train/eval, error-layout figure |
 
-Label: graph-level class `0…38` = faulted bus index in `net.bus.index` order. During-fault voltages: **`ybus_bolted`** for all 1,950 samples (case39 `calc_sc` branch path fails sag check after one probe).
-
-**Deployment (wind-digital-twin)**
-
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /twin/score` | SCADA window → expected temp, residual, anomaly score |
-| `POST /twin/rul` | Daily features → P10/P50/P90, CQR band, top-5 sensor attributions |
-| `GET /twin/series` | Dashboard timeline for failure-window scrub |
+**RUL** — unchanged; see [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md).
 
 ---
 
 ## Suggested next step
 
-Train a small GCN/GAT on `results/fault_graphs.pt` (or regenerate with `scripts/build_fault_dataset.py`), report test accuracy and top-3 vs the MLP in [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md). Re-export twin scored CSV when fleet export exists.
+Re-export twin scored CSV when fleet export exists; fill P10 lead-time table in [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md). Optional: re-simulate voltages after line outage for a stronger GNN robustness story.
 
 ---
 
 ## Key commit
 
-`d4e2ea1` — IEEE 39-bus fault dataset, PyG graphs, and MLP baseline (prior: `c8c1411` handover hash update).
+(Uncommitted Track C day 2 — prior: `d4e2ea1` IEEE 39-bus dataset + MLP baseline.)

@@ -18,7 +18,15 @@ from grid.graph import (
     zscore_fit,
     zscore_transform,
 )
+from grid.model import (
+    FaultGCN,
+    build_hop_distance_matrix,
+    drop_random_undirected_edge,
+    undirected_edge_pairs,
+)
 from grid.simulate import generate_fault_dataset, load_case39
+import torch
+from torch_geometric.data import Data
 
 
 def test_feature_names_length():
@@ -108,3 +116,46 @@ def test_mlp_smoke_and_heuristic():
     )
     assert metrics.dv_heuristic_test_accuracy >= 0.99
     assert dv_heuristic_predictions(x_raw[test]).shape == (len(test),)
+
+
+def test_gcn_forward_batch_shape():
+    topo = build_case39_topology()
+    x = torch.randn(39, 8)
+    data = Data(
+        x=x,
+        edge_index=torch.from_numpy(topo.edge_index.copy()),
+        edge_attr=torch.from_numpy(topo.edge_weight.copy()).unsqueeze(-1),
+        y=torch.tensor([3], dtype=torch.long),
+    )
+    loader = __import__("torch_geometric.loader", fromlist=["DataLoader"]).DataLoader(
+        [data, data], batch_size=2
+    )
+    model = FaultGCN()
+    batch = next(iter(loader))
+    ew = batch.edge_attr.squeeze(-1)
+    logits = model(batch.x, batch.edge_index, edge_weight=ew, batch=batch.batch)
+    assert logits.shape == (2, 39)
+
+
+def test_hop_distance_self_and_neighbor():
+    topo = build_case39_topology()
+    hop = build_hop_distance_matrix(topo.edge_index, n_nodes=39)
+    assert hop[0, 0] == 0
+    pairs = undirected_edge_pairs(topo.edge_index)
+    u, v = pairs[0]
+    assert hop[u, v] == 1
+    assert hop[v, u] == 1
+
+
+def test_drop_random_edge_removes_one_undirected_pair():
+    topo = build_case39_topology()
+    data = Data(
+        x=torch.zeros(39, 8),
+        edge_index=torch.from_numpy(topo.edge_index.copy()),
+    )
+    before = len(undirected_edge_pairs(topo.edge_index))
+    rng = np.random.default_rng(0)
+    out = drop_random_undirected_edge(data, rng)
+    after = len(undirected_edge_pairs(out.edge_index.numpy()))
+    assert after == before - 1
+    assert out.edge_index.shape[1] == data.edge_index.shape[1] - 2

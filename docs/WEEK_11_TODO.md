@@ -19,7 +19,7 @@ Reading list: [RUL_DESIGN.md](RUL_DESIGN.md), [handover.md](../handover.md), [RE
 
 - [x] SHAP or attention: which daily sensors move the RUL prediction ([docs/EXPLANATIONS.md](EXPLANATIONS.md), `src/rul/explain.py`).
 - [x] A small Streamlit or FastAPI view of the twin ([wind-digital-twin/service](https://github.com/mehmetertac/wind-digital-twin/tree/main/service)).
-- [ ] One notebook: GNN fault localization on the IEEE 39-bus system with torch-geometric and pandapower. One accuracy table, one figure.
+- [x] One notebook: GNN fault localization on the IEEE 39-bus system with torch-geometric and pandapower. One accuracy table, one figure.
 
 ## Friday
 
