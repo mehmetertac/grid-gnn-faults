@@ -66,4 +66,4 @@ Re-export twin scored CSV when fleet export exists; fill P10 lead-time table in 
 
 ## Key commit
 
-(Uncommitted Track C day 2 — prior: `d4e2ea1` IEEE 39-bus dataset + MLP baseline.)
+`c26d0ec` — GCN fault localization, hop metrics, Track C day 2 docs (prior: `d4e2ea1` dataset + MLP).
