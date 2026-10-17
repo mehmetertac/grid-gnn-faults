@@ -18,7 +18,8 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN tr
 | **Track C day 2** — [`src/grid/model.py`](src/grid/model.py), [`scripts/train_fault_gnn.py`](scripts/train_fault_gnn.py), GCN vs MLP table, [docs/figures/fault_error_layout.png](docs/figures/fault_error_layout.png) | Done |
 | GCN test acc ≈ 0.662 vs MLP 0.956 (seed 0); mean hop error 0.85 vs 0.06 | Done (local `results/`) |
 | Twin scored CSV export for four catalog events (warning table filled) | Pending export |
-| wind-digital-twin README v1.0.0 polish + tag | See wind-digital-twin handover |
+| Git tag **`v0.1.0`** pushed to origin | Done |
+| wind-digital-twin README v1.0.0 polish + tag **`v1.0.0`** | Done (sibling repo) |
 
 ### Test run (2026-10-17)
 
