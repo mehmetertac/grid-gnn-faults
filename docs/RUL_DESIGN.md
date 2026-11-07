@@ -142,7 +142,7 @@ End-to-end twin (requires installed [wind-digital-twin](https://github.com/mehme
 python scripts/run_twin.py --turbine T06 --out reports/twin
 ```
 
-**Scored export.** A full fleet scored frame (all six Week 10 columns: `oil_residual`, `bear_residual`, `anomaly_score`, `theta_oil`, `theta_bear`, `delta_bear_oil`) was not present under [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin) `results/` at implementation time (residual parquets and layer dumps do not include the full scored contract). Fill the warning column below after exporting a scored CSV from the twin without refitting the ODE or detector.
+**Scored export.** Fleet path: `python scripts/run_twin.py --fleet` writes `scored_10min.csv` and `gearbox_failures.csv` (six Week 10 scored columns per row). Then run `evaluate_quantile_rul.py --scored … --failures …` for LOFO metrics and the P10 lead-time table below.
 
 ### Maintenance planning lead time (P10)
 
@@ -150,12 +150,12 @@ Use the **pessimistic** quantile: the first calendar day in the held-out window 
 
 | Event | Turbine | P10 first below 14 d (days before failure) |
 | --- | --- | --- |
-| T01 \| 2016-07-18 | T01 | — |
-| T06 \| 2017-10-17 | T06 | — |
-| T09 \| 2016-10-11 | T09 | — |
-| T09 \| 2017-10-18 | T09 | — |
+| T01 \| 2016-07-18 | T01 | none |
+| T06 \| 2017-10-17 | T06 | none |
+| T09 \| 2016-10-11 | T09 | none |
+| T09 \| 2017-10-18 | T09 | none |
 
-Replace em dashes with integers from `warnings.csv` after running the CLI on a twin scored export. Example sentence for interviews: *The twin would have given the O&M planner X days of warning before the gearbox event on T06.*
+Populated from `warnings.csv` after `python scripts/run_twin.py --fleet` and `python scripts/evaluate_quantile_rul.py` on the **synthetic** fleet export (2026-11). **`none`** means no calendar day in the LOFO test window had P10 RUL below 14 days (empty `warning_lead_days` in `warnings.csv`). Example sentence when an integer appears: *The twin would have given the O&M planner X days of warning before the gearbox event on T06.*
 
 ## What this means for maintenance
 

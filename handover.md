@@ -1,6 +1,6 @@
 # handover.md
 
-**Last updated:** 2026-10-17
+**Last updated:** 2026-11-07
 
 Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN training, hop-distance metrics, edge-drop robustness check, and README figures. Capstone polish and tags live in sibling [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin).
 
@@ -12,18 +12,18 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN tr
 |------|--------|
 | Git remote `origin` → [grid-gnn-faults](https://github.com/mehmetertac/grid-gnn-faults) | Done |
 | [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md), [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md) | Done |
-| `src/rul/*` — labels, evaluate, quantile, conformal, plots, explain | Done |
+| `src/rul/*` — labels, evaluate, quantile, conformal, plots, explain, [scored_export.py](src/rul/scored_export.py) | Done |
+| **`scripts/run_twin.py --fleet`** — fleet `scored_10min.csv` + `gearbox_failures.csv` | Done |
+| Synthetic fleet LOFO table in [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md) + twin README (P10 lead **`none`** on cap-saturated run) | Done |
 | **Deployment** — FastAPI `/twin/score`, `/twin/rul` + Streamlit in wind-digital-twin | Done |
-| **Track C day 1** — `src/grid/*`, dataset, MLP baseline | Done |
-| **Track C day 2** — [`src/grid/model.py`](src/grid/model.py), [`scripts/train_fault_gnn.py`](scripts/train_fault_gnn.py), GCN vs MLP table, [docs/figures/fault_error_layout.png](docs/figures/fault_error_layout.png) | Done |
-| GCN test acc ≈ 0.662 vs MLP 0.956 (seed 0); mean hop error 0.85 vs 0.06 | Done (local `results/`) |
-| Twin scored CSV export for four catalog events (warning table filled) | Pending export |
+| **Track C day 2** — GCN vs MLP, hop metrics, [docs/figures/fault_error_layout.png](docs/figures/fault_error_layout.png) | Done |
+| Twin scored CSV export for four catalog events (warning table filled) | Done (synthetic EDP, local `reports/`) |
 | Git tag **`v0.1.0`** pushed to origin | Done |
 | wind-digital-twin README v1.0.0 polish + tag **`v1.0.0`** | Done (sibling repo) |
 
-### Test run (2026-10-17)
+### Test run (2026-11-07)
 
-`pytest tests/test_grid_faults.py -q` — 10 passed (torch/pandapower grid tests).
+`pytest tests/test_scored_export.py tests/test_grid_faults.py -q` — fleet concat + grid tests (run full `pytest tests/ -q` before push).
 
 ---
 
@@ -33,11 +33,12 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN tr
 grid-gnn-faults/
 ├── handover.md
 ├── docs/GRID_FAULTS.md
-├── docs/figures/fault_error_layout.png
+├── docs/RUL_DESIGN.md
 ├── notebooks/01_fault_localization_gnn.ipynb
 ├── src/rul/
-├── src/grid/          # simulate, graph, baseline, model
-├── scripts/build_fault_dataset.py
+├── src/grid/
+├── scripts/run_twin.py          # --fleet for scored export
+├── scripts/evaluate_quantile_rul.py
 ├── scripts/train_fault_gnn.py
 └── tests/
 ```
@@ -46,25 +47,24 @@ grid-gnn-faults/
 
 ## Core module API
 
-**Grid fault localization (`src/grid/`)**
+**RUL fleet export**
 
-| Module | Purpose |
-|--------|---------|
-| [simulate.py](src/grid/simulate.py) | case39 scenarios, Ybus bolted during-fault voltages |
-| [graph.py](src/grid/graph.py) | Topology, split, z-score, PyG `Data`, ΔV plot |
-| [baseline.py](src/grid/baseline.py) | Flattened MLP + min-`vm_fault` heuristic |
-| [model.py](src/grid/model.py) | `FaultGCN`, hop matrix, edge-drop, train/eval, error-layout figure |
+| Entry | Purpose |
+|-------|---------|
+| [scripts/run_twin.py](scripts/run_twin.py) | `--fleet` → per-turbine hybrid score without refitting ODE elsewhere |
+| [src/rul/scored_export.py](src/rul/scored_export.py) | `concat_scored_frames` for fleet CSV |
+| [scripts/evaluate_quantile_rul.py](scripts/evaluate_quantile_rul.py) | LOFO metrics, `warnings.csv`, conformal tables |
 
-**RUL** — unchanged; see [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md).
+**Grid fault localization** — see [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md).
 
 ---
 
 ## Suggested next step
 
-Re-export twin scored CSV when fleet export exists; fill P10 lead-time table in [docs/RUL_DESIGN.md](docs/RUL_DESIGN.md). Optional: re-simulate voltages after line outage for a stronger GNN robustness story.
+Re-run fleet export on **real** EDP when downloaded; expect P10 lead integers to move off `none` only if daily quantiles leave the 90-day cap before failure. Optional: re-simulate voltages after line outage for a stronger GNN robustness story.
 
 ---
 
 ## Key commit
 
-`c26d0ec` — GCN fault localization, hop metrics, Track C day 2 docs (prior: `d4e2ea1` dataset + MLP).
+Pending local commit — synthetic fleet export, T09 in sibling synthetic EDP, filled RUL README tables (prior: `c26d0ec` Track C day 2).

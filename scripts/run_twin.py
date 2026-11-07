@@ -12,6 +12,7 @@ import pandas as pd
 from rul.conformal import predict_conformal_rul_for_frame
 from rul.labels import attach_rul_labels, catalog_failure_frame, daily_from_scored_frame
 from rul.plots import plot_headline_timeline
+from rul.scored_export import concat_scored_frames
 
 
 def _import_twin():
@@ -68,6 +69,69 @@ def build_scored_frame(df: pd.DataFrame, pipeline, twin) -> pd.DataFrame:
         }
     )
     return frame
+
+
+def score_turbine_frame(
+    turbine_id: str,
+    turbines: dict[str, pd.DataFrame],
+    failures: list,
+    twin: dict,
+    *,
+    buffer_days: int,
+) -> tuple[pd.DataFrame, object]:
+    """Fit hybrid detector on healthy rows and score full turbine history."""
+    df = twin["clean_turbine_df"](
+        turbines[turbine_id],
+        min_power_kw=twin["THERMAL_MIN_POWER_KW"],
+    )
+    failure = twin["get_failure_for_turbine"](turbine_id, failures)
+    healthy_mask = twin["healthy_training_mask"](df.index, failure, buffer_days)
+    train = df.loc[healthy_mask]
+    if train.empty:
+        raise ValueError(f"No healthy training rows for {turbine_id}")
+    pipeline = twin["fit_hybrid_residual_detector"](train)
+    scored = build_scored_frame(df, pipeline, twin)
+    scored["turbine_id"] = turbine_id
+    return scored, pipeline
+
+
+def run_twin_fleet(
+    *,
+    data_dir: Path | None = None,
+    out_dir: Path = Path("reports/twin"),
+    buffer_days: int | None = None,
+) -> tuple[Path, Path]:
+    """Score every turbine and write fleet ``scored_10min.csv`` plus gearbox log."""
+    twin = _import_twin()
+    from wind_digital_twin.data.load_edp import load_failure_logs
+
+    raw_dir = data_dir or twin["DATA_RAW"]
+    buffer_days = buffer_days if buffer_days is not None else twin["DEFAULT_BUFFER_DAYS"]
+
+    turbines, failures = twin["load_edp_dataset"](raw_dir)
+    parts: list[pd.DataFrame] = []
+    for turbine_id in sorted(turbines):
+        scored_part, _ = score_turbine_frame(
+            turbine_id,
+            turbines,
+            failures,
+            twin,
+            buffer_days=buffer_days,
+        )
+        parts.append(scored_part)
+    fleet_scored = concat_scored_frames(parts)
+
+    failure_log = load_failure_logs(raw_dir)
+    gearbox = failure_log.loc[
+        failure_log["Component"].astype(str).str.strip().str.upper() == "GEARBOX"
+    ].copy()
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    scored_path = out_dir / "scored_10min.csv"
+    failures_path = out_dir / "gearbox_failures.csv"
+    fleet_scored.to_csv(scored_path, index=False)
+    gearbox.to_csv(failures_path, index=False)
+    return scored_path, failures_path
 
 
 def build_timeline_daily(
@@ -129,19 +193,22 @@ def run_twin(
     if turbine_id not in turbines:
         raise SystemExit(f"{turbine_id} not in dataset under {raw_dir}")
 
+    try:
+        scored, pipeline = score_turbine_frame(
+            turbine_id,
+            turbines,
+            failures,
+            twin,
+            buffer_days=buffer_days,
+        )
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
+
     df = twin["clean_turbine_df"](
         turbines[turbine_id],
         min_power_kw=twin["THERMAL_MIN_POWER_KW"],
     )
     failure = twin["get_failure_for_turbine"](turbine_id, failures)
-    healthy_mask = twin["healthy_training_mask"](df.index, failure, buffer_days)
-    train = df.loc[healthy_mask]
-    if train.empty:
-        raise SystemExit(f"No healthy training rows for {turbine_id}")
-
-    pipeline = twin["fit_hybrid_residual_detector"](train)
-    scored = build_scored_frame(df, pipeline, twin)
-    scored["turbine_id"] = turbine_id
 
     daily = daily_from_scored_frame(scored)
     failure_log = catalog_failure_frame()
@@ -169,7 +236,20 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=Path("reports/twin"))
     parser.add_argument("--buffer-days", type=int, default=None)
     parser.add_argument("--rul-max", type=int, default=90)
+    parser.add_argument(
+        "--fleet",
+        action="store_true",
+        help="Score all turbines; write scored_10min.csv and gearbox_failures.csv",
+    )
     args = parser.parse_args()
+    if args.fleet:
+        scored_path, failures_path = run_twin_fleet(
+            data_dir=args.data_dir,
+            out_dir=args.out,
+            buffer_days=args.buffer_days,
+        )
+        print(f"Wrote {scored_path} and {failures_path}")
+        return
     _, fig_path = run_twin(
         turbine_id=args.turbine,
         data_dir=args.data_dir,

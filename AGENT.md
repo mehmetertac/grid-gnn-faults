@@ -20,7 +20,7 @@ Week 10 physics, the learned residual, and the hybrid-residual detector live in 
 | [src/rul/conformal.py](src/rul/conformal.py) | MAPIE CQR at 80%/90%, LOFO conformal coverage |
 | [src/rul/plots.py](src/rul/plots.py) | Raw + CQR band figures; twin timeline |
 | [scripts/evaluate_quantile_rul.py](scripts/evaluate_quantile_rul.py) | LOFO quantile + conformal CLI |
-| [scripts/run_twin.py](scripts/run_twin.py) | End-to-end twin → conformal RUL CSV and timeline PNG |
+| [scripts/run_twin.py](scripts/run_twin.py) | End-to-end twin; `--fleet` → scored CSV + gearbox log for LOFO CLI |
 | [src/rul/explain.py](src/rul/explain.py) | TreeSHAP global/local figures and `shap_sensor_ranking.csv` |
 | [scripts/explain_rul.py](scripts/explain_rul.py) | LOFO fit/load bundle → SHAP outputs under `results/` |
 | [docs/EXPLANATIONS.md](docs/EXPLANATIONS.md) | Sensor map, CSV schema, field-intuition notes |
