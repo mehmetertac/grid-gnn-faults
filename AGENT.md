@@ -72,7 +72,7 @@ python scripts/check_file_size.py
 **Git hooks:** After creating the venv:
 
 ```powershell
-pip install -e ".[dev]"
+# Wheels-only install: see README Quickstart (requirements.lock).
 pre-commit install
 ```
 

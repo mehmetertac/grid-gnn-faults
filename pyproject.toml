@@ -7,9 +7,9 @@ name = "grid-gnn-faults"
 version = "0.1.0"
 description = "Gearbox RUL on the Week 10 wind-turbine twin, plus a later grid-fault GNN demo"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11,<3.13"
 dependencies = [
-  "pandas>=2.0",
+  "pandas>=2.0,<3",
   "numpy>=1.24",
   "lightgbm>=4.0",
   "matplotlib>=3.7",

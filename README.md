@@ -6,12 +6,39 @@ Design and voltage method: [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md). Status: [
 
 ## Quickstart
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e ".[dev,grid]"
-pip install torch --index-url https://download.pytorch.org/whl/cpu  # if needed
+Requires **CPython 3.11 or 3.12** (`requires-python` in [pyproject.toml](pyproject.toml)). Install dependencies from the hashed lock ([requirements.lock](requirements.lock)) using **wheels only** (no local compilation).
 
+**Windows (PowerShell):**
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install --only-binary=:all: "setuptools>=68" wheel
+python -m pip install --only-binary=:all: --require-hashes -r requirements.lock --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cpu
+python -m pip install --no-deps --no-build-isolation -e .
+```
+
+**Linux/macOS (bash):**
+
+```bash
+python3.11 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install --only-binary=:all: "setuptools>=68" wheel
+python -m pip install --only-binary=:all: --require-hashes -r requirements.lock --index-url https://pypi.org/simple --extra-index-url https://download.pytorch.org/whl/cpu
+python -m pip install --no-deps --no-build-isolation -e .
+```
+
+Regenerate the lock after dependency changes (requires [uv](https://github.com/astral-sh/uv)):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/regenerate_lock.ps1
+```
+
+That script runs universal + per-platform `uv pip compile` steps and [scripts/merge_lock_hashes.py](scripts/merge_lock_hashes.py) so wheel hashes cover Windows and Linux on Python 3.11 and 3.12.
+
+```powershell
 python scripts/build_fault_dataset.py --out results --scenarios 50 --seed 0
 python scripts/train_fault_gnn.py --data results --out results
 pytest tests/test_grid_faults.py -q
@@ -67,7 +94,7 @@ Dynamic fault simulations (time-domain or sequence networks), **heterogeneous** 
 Probabilistic gearbox **remaining useful life** on the Week 10 wind-turbine twin: LightGBM P10/P50/P90, MAPIE conformal intervals, leave-one-failure-out evaluation, TreeSHAP sensor rankings, and scripts that consume [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin) scored series.
 
 ```powershell
-pip install -e ".[dev]"
+# Same wheels-only install as the grid quickstart (requirements.lock includes dev + grid).
 python scripts/evaluate_quantile_rul.py --labeled path/to/daily_labeled.csv --out reports/rul
 python scripts/explain_rul.py --labeled path/to/daily_labeled.csv --out results
 ```

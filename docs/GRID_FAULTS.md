@@ -35,7 +35,7 @@ Artifacts (gitignored under `results/`):
 Regenerate:
 
 ```powershell
-pip install -e ".[dev,grid]"
+# Wheels-only install: see README Quickstart (requirements.lock + pytorch CPU index).
 python scripts/build_fault_dataset.py --out results --scenarios 50 --seed 0
 ```
 

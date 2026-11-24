@@ -1,8 +1,10 @@
 # handover.md
 
-**Last updated:** 2026-11-07
+**Last updated:** 2026-11-24
 
 Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN training, hop-distance metrics, edge-drop robustness check, and README figures. Capstone polish and tags live in sibling [wind-digital-twin](https://github.com/mehmetertac/wind-digital-twin).
+
+**Reproducibility sweep (2026-11-24):** `requires-python = ">=3.11,<3.13"`, hashed [requirements.lock](requirements.lock) (wheels-only, CPU PyTorch index), [scripts/regenerate_lock.ps1](scripts/regenerate_lock.ps1) + [scripts/merge_lock_hashes.py](scripts/merge_lock_hashes.py), CI smoke on `windows-latest` / `ubuntu-latest` × Python 3.11 / 3.12 ([.github/workflows/ci.yml](.github/workflows/ci.yml)). Pinned `pandas>=2.0,<3` so pandapower 3.1.x passes grid tests under locked installs.
 
 ---
 
@@ -20,10 +22,11 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN tr
 | Twin scored CSV export for four catalog events (warning table filled) | Done (synthetic EDP, local `reports/`) |
 | Git tag **`v0.1.0`** pushed to origin | Done |
 | wind-digital-twin README v1.0.0 polish + tag **`v1.0.0`** | Done (sibling repo) |
+| **Reproducibility** — Python pin, `requirements.lock`, wheels-only README, GitHub Actions CI | Done |
 
-### Test run (2026-11-07)
+### Test run (2026-11-24)
 
-`pytest tests/test_scored_export.py tests/test_grid_faults.py -q` — fleet concat + grid tests (run full `pytest tests/ -q` before push).
+Clean venv: lock install + `pytest tests/ -q` → **46 passed** (includes grid + RUL). Same command as CI (`MPLBACKEND=Agg`).
 
 ---
 
@@ -32,9 +35,13 @@ Week 11 gearbox RUL + deployment remain in place. **Track C day 2** added GCN tr
 ```
 grid-gnn-faults/
 ├── handover.md
+├── requirements.lock
+├── .github/workflows/ci.yml
 ├── docs/GRID_FAULTS.md
 ├── docs/RUL_DESIGN.md
 ├── notebooks/01_fault_localization_gnn.ipynb
+├── scripts/regenerate_lock.ps1
+├── scripts/merge_lock_hashes.py
 ├── src/rul/
 ├── src/grid/
 ├── scripts/run_twin.py          # --fleet for scored export
@@ -57,6 +64,8 @@ grid-gnn-faults/
 
 **Grid fault localization** — see [docs/GRID_FAULTS.md](docs/GRID_FAULTS.md).
 
+**Install (repro)** — [README.md](README.md) Quickstart: `pip install --require-hashes -r requirements.lock`, then `pip install --no-deps -e .`
+
 ---
 
 ## Suggested next step
@@ -67,4 +76,4 @@ Re-run fleet export on **real** EDP when downloaded; expect P10 lead integers to
 
 ## Key commit
 
-Pending local commit — synthetic fleet export, T09 in sibling synthetic EDP, filled RUL README tables (prior: `c26d0ec` Track C day 2).
+Pending local commit — reproducibility sweep (Python pin, lockfile, CI, pandas cap for pandapower); prior functional work on fleet export / Track C.

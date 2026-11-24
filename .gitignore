@@ -1,4 +1,9 @@
 .venv/
+.venv-smoke/
+requirements.win.lock
+requirements.win312.lock
+requirements.linux311.lock
+requirements.linux312.lock
 __pycache__/
 *.py[cod]
 .pytest_cache/
