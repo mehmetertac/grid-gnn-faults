@@ -76,4 +76,4 @@ Re-run fleet export on **real** EDP when downloaded; expect P10 lead integers to
 
 ## Key commit
 
-Pending local commit — reproducibility sweep (Python pin, lockfile, CI, pandas cap for pandapower); prior functional work on fleet export / Track C.
+`2ca293f` — reproducibility sweep (Python pin, lockfile, CI, pandas cap for pandapower).
